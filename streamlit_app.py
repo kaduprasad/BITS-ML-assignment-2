@@ -28,23 +28,84 @@ st.set_page_config(
 # Custom CSS
 st.markdown("""
 <style>
+    .block-container {
+        padding-top: 1rem;
+    }
     .main-header {
         font-size: 2.5rem;
-        color: #6C3483;
+        background: linear-gradient(135deg, #00C9FF 0%, #92FE9D 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
         text-align: center;
         margin-bottom: 1rem;
+        margin-top: 1em;
+        font-weight: 700;
     }
     .sub-header {
         font-size: 1.2rem;
-        color: #5D6D7E;
+        color: #64B5F6;
         text-align: center;
         margin-bottom: 2rem;
     }
     .metric-card {
-        background-color: #F4ECF7;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
         padding: 1rem;
         border-radius: 0.5rem;
-        border-left: 4px solid #8E44AD;
+        border-left: 4px solid #00C9FF;
+    }
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 4px;
+        border-bottom: 2px solid #00bcd4;
+        background-color: transparent;
+    }
+    .stTabs [data-baseweb="tab"] {
+        background-color: #e0f7fa;
+        border-radius: 8px 8px 0 0;
+        padding: 10px 20px;
+        color: #00838f;
+        border: 1px solid #b2ebf2;
+        border-bottom: none;
+        margin-bottom: -2px;
+    }
+    .stTabs [data-baseweb="tab"]:hover {
+        background-color: #b2ebf6;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #ffffff;
+        color: #00838f;
+        border: 2px solid #00bcd4;
+        border-bottom: 2px solid #ffffff;
+        font-weight: 600;
+    }
+    .stTabs [data-baseweb="tab-highlight"] {
+        display: none;
+    }
+    .stTabs [data-baseweb="tab-border"] {
+        display: none;
+    }
+    .stMetric {
+        background: linear-gradient(135deg, #e0f7fa 0%, #b2ebf2 100%);
+        padding: 15px;
+        border-radius: 10px;
+        border: 1px solid #00bcd4;
+    }
+    .stMetric label {
+        color: #00838f !important;
+    }
+    .stMetric [data-testid="stMetricValue"] {
+        color: #0f3460 !important;
+    }
+    .stDataFrame {
+        border: 1px solid #00C9FF33;
+        border-radius: 10px;
+    }
+    div[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #0f0f23 0%, #16213e 100%);
+    }
+    .stSuccess {
+        background: linear-gradient(135deg, #00C9FF22 0%, #92FE9D22 100%);
+        border: 1px solid #92FE9D;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -116,12 +177,20 @@ def calculateAllMetrics(yTrue, yPred, yPredProba=None):
 def plotConfusionMatrix(cm, modelName):
     """Plot confusion matrix"""
     fig, ax = plt.subplots(figsize=(6, 5))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Purples', ax=ax,
+    fig.patch.set_facecolor('#f8fafc')
+    ax.set_facecolor('#ffffff')
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', ax=ax,
                 xticklabels=['No Disease', 'Disease'],
-                yticklabels=['No Disease', 'Disease'])
-    ax.set_xlabel('Predicted')
-    ax.set_ylabel('Actual')
-    ax.set_title(f'Confusion Matrix - {modelName}')
+                yticklabels=['No Disease', 'Disease'],
+                annot_kws={'fontsize': 14, 'fontweight': 'bold'},
+                linewidths=2, linecolor='white')
+    
+    for text in ax.texts:
+        text.set_color('white' if int(text.get_text()) > cm.max()/2 else '#1a1a2e')
+    ax.set_xlabel('Predicted', color='#0f3460')
+    ax.set_ylabel('Actual', color='#0f3460')
+    ax.set_title(f'Confusion Matrix - {modelName}', color='#00838f', fontweight='bold')
+    ax.tick_params(colors='#0f3460')
     return fig
 
 def plotRocCurve(yTrue, yPredProba, modelName):
@@ -130,14 +199,23 @@ def plotRocCurve(yTrue, yPredProba, modelName):
     auc = roc_auc_score(yTrue, yPredProba)
     
     fig, ax = plt.subplots(figsize=(6, 5))
-    ax.plot(fpr, tpr, color='#8E44AD', lw=2, label=f'ROC curve (AUC = {auc:.4f})')
-    ax.plot([0, 1], [0, 1], color='gray', linestyle='--')
+    fig.patch.set_facecolor('#f8fafc')
+    ax.set_facecolor('#ffffff')
+    ax.plot(fpr, tpr, color='#00838f', lw=3, label=f'ROC curve (AUC = {auc:.4f})')
+    ax.fill_between(fpr, tpr, alpha=0.2, color='#00bcd4')
+    ax.plot([0, 1], [0, 1], color='#26a69a', linestyle='--', alpha=0.7)
     ax.set_xlim([0.0, 1.0])
     ax.set_ylim([0.0, 1.05])
-    ax.set_xlabel('False Positive Rate')
-    ax.set_ylabel('True Positive Rate')
-    ax.set_title(f'ROC Curve - {modelName}')
-    ax.legend(loc='lower right')
+    ax.set_xlabel('False Positive Rate', color='#0f3460')
+    ax.set_ylabel('True Positive Rate', color='#0f3460')
+    ax.set_title(f'ROC Curve - {modelName}', color='#00838f', fontweight='bold')
+    ax.legend(loc='lower right', facecolor='#ffffff', edgecolor='#00838f', labelcolor='#0f3460')
+    ax.tick_params(colors='#0f3460')
+    ax.spines['bottom'].set_color('#b0bec5')
+    ax.spines['top'].set_color('#b0bec5')
+    ax.spines['left'].set_color('#b0bec5')
+    ax.spines['right'].set_color('#b0bec5')
+    ax.grid(True, alpha=0.3, color='#b0bec5')
     return fig
 
 @st.cache_data
@@ -190,7 +268,7 @@ def main():
     st.markdown('<p class="sub-header">Machine Learning Assignment 2 ( Prasad Kadu 2025AA05195 ) </p>', unsafe_allow_html=True)
     
     # Sidebar
-    st.sidebar.header("📁 Data Upload")
+    st.sidebar.header("Data Upload")
     
     # File upload option
     uploadedFile = st.sidebar.file_uploader(
@@ -259,10 +337,17 @@ def main():
         
         st.subheader("Target Distribution")
         fig, ax = plt.subplots(figsize=(6, 4))
-        dataFrame['HeartDisease'].value_counts().plot(kind='bar', ax=ax, color=['#1ABC9C', '#E74C3C'])
-        ax.set_xticklabels(['No Disease', 'Disease'], rotation=0)
-        ax.set_ylabel('Count')
-        ax.set_title('Heart Disease Distribution')
+        fig.patch.set_facecolor('#f8fafc')
+        ax.set_facecolor('#ffffff')
+        dataFrame['HeartDisease'].value_counts().plot(kind='bar', ax=ax, color=['#00bcd4', '#26a69a'])
+        ax.set_xticklabels(['No Disease', 'Disease'], rotation=0, color='#0f3460')
+        ax.set_ylabel('Count', color='#0f3460')
+        ax.set_title('Heart Disease Distribution', color='#00838f', fontweight='bold')
+        ax.tick_params(colors='#0f3460')
+        ax.spines['bottom'].set_color('#b0bec5')
+        ax.spines['top'].set_color('#f8fafc')
+        ax.spines['left'].set_color('#b0bec5')
+        ax.spines['right'].set_color('#f8fafc')
         st.pyplot(fig)
     
     # Tab 2: Model Performance
@@ -299,12 +384,21 @@ def main():
             metricsForPlot = metricsForPlot.set_index('Model')
             
             fig, ax = plt.subplots(figsize=(12, 6))
-            metricsForPlot.plot(kind='bar', ax=ax, width=0.8)
-            ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right')
-            ax.set_ylabel('Score')
-            ax.set_title('Model Performance Comparison')
-            ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left')
+            fig.patch.set_facecolor('#f8fafc')
+            ax.set_facecolor('#ffffff')
+            coolColors = ['#00838f', '#26a69a', '#00bcd4', '#4dd0e1', '#80deea', '#b2ebf2']
+            metricsForPlot.plot(kind='bar', ax=ax, width=0.8, color=coolColors)
+            ax.set_xticklabels(ax.get_xticklabels(), rotation=45, ha='right', color='#0f3460')
+            ax.set_ylabel('Score', color='#0f3460')
+            ax.set_title('Model Performance Comparison', color='#00838f', fontweight='bold', fontsize=14)
+            ax.legend(bbox_to_anchor=(1.02, 1), loc='upper left', facecolor='#ffffff', edgecolor='#00838f', labelcolor='#0f3460')
             ax.set_ylim(0, 1.1)
+            ax.tick_params(colors='#0f3460')
+            ax.spines['bottom'].set_color('#b0bec5')
+            ax.spines['top'].set_color('#f8fafc')
+            ax.spines['left'].set_color('#b0bec5')
+            ax.spines['right'].set_color('#f8fafc')
+            ax.grid(True, alpha=0.3, color='#b0bec5', axis='y')
             plt.tight_layout()
             st.pyplot(fig)
             
