@@ -491,34 +491,22 @@ def main():
         # Generate observations for each model
         observations = {
             'Logistic Regression': {
-                'description': 'Linear model that works well for linearly separable data.',
-                'strengths': 'Fast training, interpretable coefficients, works well with small datasets.',
-                'weaknesses': 'Assumes linear relationship, may underperform on complex patterns.'
+                'description': 'Linear model that works well for linearly separable data.'
             },
             'Decision Tree': {
                 'description': 'Tree-based model that splits data based on feature thresholds.',
-                'strengths': 'Easy to interpret, handles non-linear relationships, no feature scaling needed.',
-                'weaknesses': 'Prone to overfitting, sensitive to small data changes.'
             },
             'kNN': {
-                'description': 'Instance-based learning that classifies based on nearest neighbors.',
-                'strengths': 'Simple concept, no training phase, adapts to complex boundaries.',
-                'weaknesses': 'Slow prediction on large datasets, sensitive to feature scaling and irrelevant features.'
+                'description': 'Instance-based learning that classifies based on nearest neighbors.'
             },
             'Naive Bayes': {
-                'description': 'Probabilistic classifier based on Bayes theorem with independence assumption.',
-                'strengths': 'Very fast, works well with high-dimensional data, good for small datasets.',
-                'weaknesses': 'Assumes feature independence which is rarely true in practice.'
+                'description': 'Probabilistic classifier based on Bayes theorem with independence assumption'
             },
             'Random Forest (Ensemble)': {
-                'description': 'Ensemble of decision trees using bagging to reduce overfitting.',
-                'strengths': 'Robust to overfitting, handles missing values, provides feature importance.',
-                'weaknesses': 'Less interpretable than single tree, slower training.'
+                'description': 'Ensemble of decision trees using bagging to reduce overfitting.'
             },
             'XGBoost (Ensemble)': {
-                'description': 'Gradient boosting algorithm that builds trees sequentially.',
-                'strengths': 'High accuracy, handles imbalanced data, built-in regularization.',
-                'weaknesses': 'More hyperparameters to tune, can overfit if not tuned properly.'
+                'description': 'Gradient boosting algorithm that builds trees sequentially.'
             }
         }
         
@@ -570,8 +558,6 @@ def main():
             
             with st.expander(f"{modelName}"):
                 st.markdown(f"**Description:** {obs.get('description', 'N/A')}")
-                st.markdown(f"**Strengths:** {obs.get('strengths', 'N/A')}")
-                st.markdown(f"**Weaknesses:** {obs.get('weaknesses', 'N/A')}")
                 st.markdown("**Performance on this dataset:**")
                 col1, col2, col3 = st.columns(3)
                 with col1:
