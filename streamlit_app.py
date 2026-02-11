@@ -147,10 +147,10 @@ def getModel(modelName):
     models = {
         'Logistic Regression': LogisticRegression(max_iter=1000, random_state=42),
         'Decision Tree': DecisionTreeClassifier(random_state=42),
-        'K-Nearest Neighbors': KNeighborsClassifier(n_neighbors=5),
+        'kNN': KNeighborsClassifier(n_neighbors=5),
         'Naive Bayes': GaussianNB(),
-        'Random Forest': RandomForestClassifier(n_estimators=100, random_state=42),
-        'XGBoost': XGBClassifier(n_estimators=100, random_state=42, eval_metric='logloss')
+        'Random Forest (Ensemble)': RandomForestClassifier(n_estimators=100, random_state=42),
+        'XGBoost (Ensemble)': XGBClassifier(n_estimators=100, random_state=42, eval_metric='logloss')
     }
     return models.get(modelName)
 
@@ -231,8 +231,8 @@ def trainAllModels(_X, _y, testSize=0.2):
     xTrainScaled = scaler.fit_transform(xTrain)
     xTestScaled = scaler.transform(xTest)
     
-    modelNames = ['Logistic Regression', 'Decision Tree', 'K-Nearest Neighbors',
-                   'Naive Bayes', 'Random Forest', 'XGBoost']
+    modelNames = ['Logistic Regression', 'Decision Tree', 'kNN',
+                   'Naive Bayes', 'Random Forest (Ensemble)', 'XGBoost (Ensemble)']
     
     allResults = {}
     
@@ -300,14 +300,14 @@ def main():
     st.sidebar.header("Model Selection")
     
     modelOptions = ['All Models', 'Logistic Regression', 'Decision Tree', 
-                     'K-Nearest Neighbors', 'Naive Bayes', 'Random Forest', 'XGBoost']
+                     'kNN', 'Naive Bayes', 'Random Forest (Ensemble)', 'XGBoost (Ensemble)']
     selectedModel = st.sidebar.selectbox("Select Model", modelOptions)
     
     # Test size slider
     testSize = st.sidebar.slider("Test Set Size", 0.1, 0.4, 0.2, 0.05)
     
     # Main content tabs
-    tab1, tab2, tab3, tab4 = st.tabs(["Dataset", "Model Performance", "Visualizations", "Classification Report"])
+    tab1, tab2, tab3, tab4, tab5 = st.tabs(["Dataset", "Model Performance", "Visualizations", "Classification Report", "Observations"])
     
     # Preprocess data
     X, y, encoders = preprocessData(dataFrame)
@@ -339,8 +339,8 @@ def main():
         fig, ax = plt.subplots(figsize=(6, 4))
         fig.patch.set_facecolor('#f8fafc')
         ax.set_facecolor('#ffffff')
-        dataFrame['HeartDisease'].value_counts().plot(kind='bar', ax=ax, color=['#00bcd4', '#26a69a'])
-        ax.set_xticklabels(['No Disease', 'Disease'], rotation=0, color='#0f3460')
+        dataFrame['HeartDisease'].value_counts().sort_index().plot(kind='bar', ax=ax, color=['#00bcd4', '#26a69a'])
+        ax.set_xticklabels(['0 (No Disease)', '1 (Disease)'], rotation=0, color='#0f3460')
         ax.set_ylabel('Count', color='#0f3460')
         ax.set_title('Heart Disease Distribution', color='#00838f', fontweight='bold')
         ax.tick_params(colors='#0f3460')
@@ -483,6 +483,106 @@ def main():
             st.metric("False Negatives", confusionMatrix[1][0])
         with col4:
             st.metric("True Positives", confusionMatrix[1][1])
+    
+    # Tab 5: Observations
+    with tab5:
+        st.header("Model Performance Observations")
+        
+        # Generate observations for each model
+        observations = {
+            'Logistic Regression': {
+                'description': 'Linear model that works well for linearly separable data.',
+                'strengths': 'Fast training, interpretable coefficients, works well with small datasets.',
+                'weaknesses': 'Assumes linear relationship, may underperform on complex patterns.'
+            },
+            'Decision Tree': {
+                'description': 'Tree-based model that splits data based on feature thresholds.',
+                'strengths': 'Easy to interpret, handles non-linear relationships, no feature scaling needed.',
+                'weaknesses': 'Prone to overfitting, sensitive to small data changes.'
+            },
+            'kNN': {
+                'description': 'Instance-based learning that classifies based on nearest neighbors.',
+                'strengths': 'Simple concept, no training phase, adapts to complex boundaries.',
+                'weaknesses': 'Slow prediction on large datasets, sensitive to feature scaling and irrelevant features.'
+            },
+            'Naive Bayes': {
+                'description': 'Probabilistic classifier based on Bayes theorem with independence assumption.',
+                'strengths': 'Very fast, works well with high-dimensional data, good for small datasets.',
+                'weaknesses': 'Assumes feature independence which is rarely true in practice.'
+            },
+            'Random Forest (Ensemble)': {
+                'description': 'Ensemble of decision trees using bagging to reduce overfitting.',
+                'strengths': 'Robust to overfitting, handles missing values, provides feature importance.',
+                'weaknesses': 'Less interpretable than single tree, slower training.'
+            },
+            'XGBoost (Ensemble)': {
+                'description': 'Gradient boosting algorithm that builds trees sequentially.',
+                'strengths': 'High accuracy, handles imbalanced data, built-in regularization.',
+                'weaknesses': 'More hyperparameters to tune, can overfit if not tuned properly.'
+            }
+        }
+        
+        # Create observations table based on actual metrics
+        st.subheader("Model Observations Table")
+        
+        obsData = []
+        for modelName, result in allResults.items():
+            m = result['metrics']
+            acc, auc, mcc = m['Accuracy'], m['AUC'], m['MCC']
+            
+            # Generate performance observation
+            if acc >= 0.85:
+                perf = f"Excellent accuracy ({acc:.2%})"
+            elif acc >= 0.75:
+                perf = f"Good accuracy ({acc:.2%})"
+            else:
+                perf = f"Moderate accuracy ({acc:.2%})"
+            
+            if auc >= 0.90:
+                perf += ". Outstanding discrimination (AUC: {:.4f})".format(auc)
+            elif auc >= 0.80:
+                perf += ". Good discrimination (AUC: {:.4f})".format(auc)
+            else:
+                perf += ". Fair discrimination (AUC: {:.4f})".format(auc)
+            
+            if mcc >= 0.6:
+                perf += ". Strong prediction correlation (MCC: {:.4f})".format(mcc)
+            elif mcc >= 0.4:
+                perf += ". Moderate prediction correlation (MCC: {:.4f})".format(mcc)
+            
+            obs = observations.get(modelName, {})
+            perf += f". {obs.get('strengths', '')}"
+            
+            obsData.append({
+                'ML Model Name': modelName,
+                'Observation about model performance': perf
+            })
+        
+        obsDf = pd.DataFrame(obsData)
+        st.dataframe(obsDf, use_container_width=True, hide_index=True)
+        
+        # Detailed observations for each model
+        st.subheader("Detailed Model Analysis")
+        
+        for modelName, result in allResults.items():
+            m = result['metrics']
+            obs = observations.get(modelName, {})
+            
+            with st.expander(f"{modelName}"):
+                st.markdown(f"**Description:** {obs.get('description', 'N/A')}")
+                st.markdown(f"**Strengths:** {obs.get('strengths', 'N/A')}")
+                st.markdown(f"**Weaknesses:** {obs.get('weaknesses', 'N/A')}")
+                st.markdown("**Performance on this dataset:**")
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.metric("Accuracy", f"{m['Accuracy']:.4f}")
+                    st.metric("AUC", f"{m['AUC']:.4f}")
+                with col2:
+                    st.metric("Precision", f"{m['Precision']:.4f}")
+                    st.metric("Recall", f"{m['Recall']:.4f}")
+                with col3:
+                    st.metric("F1 Score", f"{m['F1 Score']:.4f}")
+                    st.metric("MCC", f"{m['MCC']:.4f}")
 
 if __name__ == "__main__":
     main()
